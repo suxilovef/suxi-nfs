@@ -3,10 +3,10 @@
 > 文档状态：待验证  
 > 知识阶段：L0 基础设施层  
 > 适用范围：Linux NFS 客户端与服务端；NFSv3、NFSv4.0、NFSv4.1；Java 11+。具体参数以目标发行版、内核和 `nfs-utils` 版本为准  
-> 版本：1.0.0  
+> 版本：1.1.0
 > 最后更新：2026-07-31  
 > 前置文档：无  
-> 关联文档：无
+> 关联文档：待后续建立（见第 10 节）
 
 ## 目录
 
@@ -88,16 +88,16 @@ NFSv3 的挂载通常由 `mountd` 和 `rpcbind` 辅助完成，实际文件 I/O 
 
 ```text
 t0  Java write()/close() 返回
-    可能只表示客户端已接受数据并完成协议要求的确认
+    对普通 buffered I/O，可能只表示客户端已接受数据；不等于稳定落盘
 
-t1  服务端 nfsd 返回成功
-    表示服务端已按 NFS 稳定性规则处理请求，不等于物理介质断电可恢复
+t1  NFS WRITE 响应返回 committed 状态
+    可能是 UNSTABLE、DATA_SYNC 或 FILE_SYNC；UNSTABLE 不等于稳定存储完成
 
-t2  后端文件系统完成稳定写入
-    需要服务端 writeback、文件系统日志和存储设备正确执行 flush/barrier
+t2  COMMIT/服务端文件系统/存储设备完成稳定写入
+    仍取决于服务端 export 策略、文件系统、控制器和设备写缓存
 ```
 
-应用必须使用 `FileChannel.force(true)`、`fsync` 或等价机制表达持久化意图；最终可靠性仍受服务端文件系统、存储控制器和 NFS 导出策略影响。
+具备持久化要求的应用应使用 `FileChannel.force(true)`、`fsync` 或等价机制表达意图；这会促使客户端执行相应的刷新和 NFS 稳定写流程，但不能单独证明跨故障域持久化。最终可靠性仍受服务端文件系统、存储控制器和 NFS 导出策略影响。
 
 ## 3. 写入链路
 
@@ -140,14 +140,15 @@ NFSv3 没有 NFSv4 的 open state，应用的打开语义主要由客户端本�
 **适用范围：Linux，需具备对目标进程的跟踪权限**
 
 ```bash
-strace -ff -ttT -yy -e trace=openat,openat2,write,writev,fsync,fdatasync,close -p <java-pid>
+JAVA_PID=12345
+strace -ff -ttT -yy -e trace=openat,openat2,write,writev,fsync,fdatasync,close -p "$JAVA_PID"
 ```
 
 观察 `openat`、`write`、`fsync`、`close` 的耗时；不要假设 `close` 永远是常数时间操作。
 
 ### 3.3 write 阶段
 
-应用的 `write()` 先进入客户端页缓存，之后由 NFS 客户端按实现和挂载参数组织 WRITE 请求：
+对普通 buffered I/O，应用的 `write()` 通常先进入客户端页缓存，之后由 NFS 客户端按实现和挂载参数组织 WRITE 请求。`O_DIRECT`、`O_SYNC`、部分 direct I/O 和内存映射写入可能采用不同路径，不能套用下面的简化流程：
 
 ```text
 write()
@@ -169,6 +170,8 @@ write()
 
 ### 3.4 close、flush 和 COMMIT
 
+Java `close()`、Linux `close()`、NFS `COMMIT` 和后端介质 flush 是不同层次的动作。`close()` 可能触发文件操作的 flush 回调或写回，但不能据此假设一定发出完整的 COMMIT：
+
 ```text
 Java close
   -> 文件描述符关闭
@@ -178,14 +181,17 @@ Java close
   -> 存储设备确认
 ```
 
-不能用“`close()` 返回成功”证明数据已经完成跨故障域持久化。需要持久化边界的程序应在关键记录完成后调用：
+不能用“`close()` 返回成功”证明数据已经完成跨故障域持久化。具备持久化边界要求的程序可在关键记录完成后调用：
 
 ```java
 try (FileChannel channel = FileChannel.open(path,
         StandardOpenOption.CREATE,
         StandardOpenOption.WRITE,
         StandardOpenOption.TRUNCATE_EXISTING)) {
-    channel.write(StandardCharsets.UTF_8.encode(payload));
+    ByteBuffer buffer = StandardCharsets.UTF_8.encode(payload);
+    while (buffer.hasRemaining()) {
+        channel.write(buffer);
+    }
     channel.force(true);
 }
 ```
@@ -254,15 +260,22 @@ Path temp = target.resolveSibling(".app.json.tmp-" + ProcessHandle.current().pid
 
 try (FileChannel channel = FileChannel.open(temp,
         StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
-    channel.write(StandardCharsets.UTF_8.encode(payload));
+    ByteBuffer buffer = StandardCharsets.UTF_8.encode(payload);
+    while (buffer.hasRemaining()) {
+        channel.write(buffer);
+    }
     channel.force(true);
 }
 
-Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE,
-        StandardCopyOption.REPLACE_EXISTING);
+try {
+    Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE);
+} catch (AtomicMoveNotSupportedException e) {
+    Files.deleteIfExists(temp);
+    throw e;
+}
 ```
 
-`ATOMIC_MOVE` 是否能在 NFS 上得到目标语义取决于服务端、文件系统和同一文件系统边界；必须在目标环境验证，不能仅依据本地测试结果。
+`ATOMIC_MOVE` 是否能在 NFS 上得到目标语义取决于服务端、文件系统和同一文件系统边界；必须在目标环境验证，不能仅依据本地测试结果。使用 `ATOMIC_MOVE` 时，Java 规范允许其他复制选项被忽略，因此不能假设 `REPLACE_EXISTING` 一定生效。若目标文件已存在，必须针对目标服务端验证替换语义；不支持原子移动时示例选择失败并清理临时文件，而不是静默降级为非原子覆盖。需要目录项持久化时，还应单独评估父目录的 `fsync` 能力。
 
 ### 5.3 hard 与 soft 的故障语义
 
@@ -285,17 +298,19 @@ findmnt -t nfs,nfs4
 # NFS 操作计数、错误和 RPC 状态
 nfsstat -c
 cat /proc/self/mountstats
+nfsiostat 1 10
 
 # 块设备和 CPU 基线
 iostat -xz 1 10
 vmstat 1 10
-ss -tin dst <nfs-server-ip>:2049
+NFS_SERVER_IP=192.0.2.10
+ss -tin "dst ${NFS_SERVER_IP}:2049"
 ```
 
 重点指标：
 
 - `retrans`、RPC timeout、transport backlog：网络丢包、服务端响应慢或客户端队列问题的线索。
-- READ/WRITE/GETATTR/LOOKUP 的调用次数与平均延迟：区分数据面和元数据面。
+- READ/WRITE/GETATTR/LOOKUP 的调用次数与 RTT/执行时间：使用 `nfsiostat` 区分数据面和元数据面。
 - 客户端 CPU、软中断、内存回收和本地磁盘等待：NFS 不是唯一瓶颈。
 - TCP 重传、RTT、拥塞窗口和连接数：确认网络是否放大了应用延迟。
 
@@ -314,7 +329,7 @@ ss -s
 journalctl -u nfs-server --since "10 min ago"
 ```
 
-关注 nfsd 线程是否排队、后端块设备 `await`/`%util` 是否饱和、文件系统错误、内存压力、网络队列和导出选项是否在变更后发生变化。
+关注 nfsd 线程配置与 CPU 是否饱和、后端块设备 `await`/`%util` 是否饱和、文件系统错误、内存压力、网络队列和导出选项是否在变更后发生变化。线程排队需要结合 `nfsiostat`、内核 tracing 或 eBPF 进一步确认，不能仅由 `/proc/fs/nfsd/threads` 的线程数推断。
 
 ### 6.3 从网络确认协议操作
 
@@ -322,16 +337,50 @@ journalctl -u nfs-server --since "10 min ago"
 **适用范围：已获生产抓包授权；抓包可能包含业务数据，必须脱敏并限制保存时间**
 
 ```bash
-timeout 30 tcpdump -i any -nn -s 160 -w /tmp/nfs-trace.pcap host <nfs-server-ip> and port 2049
+NFS_SERVER_IP=192.0.2.10
+timeout 30 tcpdump -i any -nn -s 0 -w /tmp/nfs-trace.pcap "host ${NFS_SERVER_IP} and port 2049"
 ```
 
-抓包用于确认请求是否发出、TCP 是否重传、请求与响应之间的时间差以及 NFS 操作序列。生产环境禁止在未评估磁盘、CPU、隐私和合规影响时长期全量抓包。
+抓包用于确认请求是否发出、TCP 是否重传、请求与响应之间的时间差以及 NFS 操作序列。`-s 0` 会保留完整 payload，可能包含业务数据；生产环境禁止在未评估磁盘、CPU、隐私和合规影响时长期全量抓包。
+
+### 6.4 最小验证实验与回滚
+
+以下实验建议在独立测试导出上执行，不要使用生产目录。实验需要一台服务端和至少两台客户端，或一台客户端配合服务端本地校验。
+
+**执行端：客户端 1**<br>
+**适用范围：已挂载的测试 NFS 目录；将变量替换为真实测试路径**
+
+```bash
+TEST_DIR=/mnt/nfs-test
+TEST_FILE="$TEST_DIR/.nfs-kb-l0-01-$(hostname)-$$"
+printf 'nfs-kb-l0-01 %s\n' "$(date -Is)" > "$TEST_FILE"
+sync -f "$TEST_FILE"
+stat "$TEST_FILE"
+sha256sum "$TEST_FILE"
+```
+
+**执行端：客户端 2**<br>
+**预期观察：** 在一致性缓存窗口内读取同一文件，记录 `stat` 的大小、mtime 和校验和；若与客户端 1 不一致，继续对照挂载参数中的 `actimeo`、客户端时钟和服务端日志。
+
+```bash
+TEST_FILE=/mnt/nfs-test/.nfs-kb-l0-01-REPLACE-ME
+stat "$TEST_FILE"
+sha256sum "$TEST_FILE"
+```
+
+**清理/回滚：客户端 1**
+
+```bash
+rm -f "$TEST_FILE"
+```
+
+实验应同时记录客户端/服务端 OS、内核、NFS 版本、挂载与导出参数、执行时间、`nfsiostat` 输出和实际观察结果。当前工作区没有 Linux NFS 环境，因此本实验仅作为待执行验证步骤，不构成已验证结论。
 
 ## 7. Java 工程视角
 
 ### 7.1 阻塞点如何传递到线程池
 
-NFS 客户端在内核中等待 RPC 时，Java 线程通常表现为不可运行或处于系统调用等待。应用层可能只看到：
+NFS 客户端在内核中等待 RPC 时，Linux task 可能处于 `D`（不可中断睡眠）状态；但 JVM 线程 dump 可能仍显示为 `RUNNABLE`，因为线程正在执行 native I/O。应用层可能只看到：
 
 ```text
 HTTP 请求堆积
@@ -341,7 +390,7 @@ HTTP 请求堆积
   -> 容器被判定为不健康并重启
 ```
 
-Java 的 `Future` 超时不会必然中断内核中的 NFS I/O；中断线程后，底层文件描述符和 NFS 请求仍需观察。应结合线程池隔离、请求超时、降级路径和挂载故障语义设计。
+Java 的 `Future` 超时不会必然中断内核中的 NFS I/O；中断线程后，底层文件描述符和 NFS 请求仍需观察。应同时采集 JVM 线程栈和 Linux task 状态，并结合线程池隔离、请求超时、降级路径和挂载故障语义设计。
 
 ### 7.2 FileLock 不等于分布式锁服务
 
@@ -402,16 +451,17 @@ NFS 文件访问是一条跨用户态、VFS、客户端缓存、NFS 协议、RPC
 
 ### 关联文档
 
-后续文档生成后，在此补充内部链接：
+后续文档生成后，将以下规划标识替换为相对 Markdown 链接；当前文件尚不存在，因此暂不创建失效链接：
 
-- NFS-KB-L0-02：SUNRPC、XDR 与 RPC 请求生命周期
-- NFS-KB-L1-01：NFSv3 到 NFSv4.2 的协议演进与版本选型
-- NFS-KB-L2-01：服务端导出与客户端挂载基线
-- NFS-KB-L4-01：NFS 性能指标、基线与容量模型
-- NFS-KB-L5-01：NFS 故障树与证据链排障方法
+- 待建立：`NFS-KB-L0-02` SUNRPC、XDR 与 RPC 请求生命周期
+- 待建立：`NFS-KB-L1-01` NFSv3 到 NFSv4.2 的协议演进与版本选型
+- 待建立：`NFS-KB-L2-01` 服务端导出与客户端挂载基线
+- 待建立：`NFS-KB-L4-01` NFS 性能指标、基线与容量模型
+- 待建立：`NFS-KB-L5-01` NFS 故障树与证据链排障方法
 
 ## 变更记录
 
 | 日期 | 版本 | 变更内容 | 证据或原因 |
 | --- | --- | --- | --- |
+| 2026-07-31 | 1.1.0 | 修正稳定写语义、Java 部分写入、原子移动、观测指标和验证实验 | 基于文档审查结果修订 |
 | 2026-07-31 | 1.0.0 | 初始发布 | 建立 Java 文件 I/O 到 NFS 服务端的端到端模型 |
