@@ -3,10 +3,10 @@
 > 文档状态：待验证  
 > 知识阶段：L3 安全与身份  
 > 适用范围：Linux NFS 客户端与服务端；RHEL/Rocky/AlmaLinux 8/9、Ubuntu 22.04/24.04 常见环境；NFSv3、NFSv4.0、NFSv4.1、NFSv4.2；MIT Kerberos 或 Active Directory Kerberos 常见集成；`sec=krb5/krb5i/krb5p`；具体行为以目标内核、nfs-utils、krb5-libs、gssproxy、KDC/AD、NAS 和厂商兼容矩阵为准  
-> 版本：1.0.1  
-> 最后更新：2026-08-02  
+> 版本：1.0.2\
+> 最后更新：2026-08-03\
 > 前置文档：[NFS-KB-L0-02 SUNRPC、XDR 与 RPC 请求生命周期](../L0-foundation/NFS-KB-L0-02-sunrpc-xdr-request-lifecycle.md)、[NFS-KB-L3-01 AUTH_SYS、身份映射与 Linux 权限模型](NFS-KB-L3-01-auth-sys-identity-mapping-and-linux-permissions.md)  
-> 关联文档：[NFS-KB-L2-01 服务端导出与客户端挂载生产基线](../L2-deployment/NFS-KB-L2-01-export-and-mount-baseline.md)、[NFS-KB-L1-03 NFSv4 状态、租约、stateid 与恢复](../L1-protocol/NFS-KB-L1-03-nfsv4-state-lease-stateid-and-recovery.md)
+> 关联文档：[NFS-KB-L2-01 服务端导出与客户端挂载生产基线](../L2-deployment/NFS-KB-L2-01-export-and-mount-baseline.md)、[NFS-KB-L1-03 NFSv4 状态、租约、stateid 与恢复](../L1-protocol/NFS-KB-L1-03-nfsv4-state-lease-stateid-and-recovery.md)、[NFS-KB-L3-03 NFSv4 ACL、SELinux 与多协议权限集成](NFS-KB-L3-03-nfsv4-acl-selinux-and-multiprotocol-permissions.md)
 
 ## 目录
 
@@ -1069,11 +1069,12 @@ mount unit active
 - [NFS-KB-L2-01 服务端导出与客户端挂载生产基线](../L2-deployment/NFS-KB-L2-01-export-and-mount-baseline.md)
 - [NFS-KB-L2-02 systemd、fstab、autofs 与挂载生命周期](../L2-deployment/NFS-KB-L2-02-systemd-autofs-mount-lifecycle.md)
 - [NFS-KB-L3-01 AUTH_SYS、身份映射与 Linux 权限模型](NFS-KB-L3-01-auth-sys-identity-mapping-and-linux-permissions.md)
-- 待建立：`NFS-KB-L3-03` NFSv4 ACL、SELinux 与多协议权限集成
+- [NFS-KB-L3-03 NFSv4 ACL、SELinux 与多协议权限集成](NFS-KB-L3-03-nfsv4-acl-selinux-and-multiprotocol-permissions.md)
 
 ## 变更记录
 
 | 日期 | 版本 | 变更内容 | 证据或原因 |
 | --- | --- | --- | --- |
+| 2026-08-03 | 1.0.2 | 将已发布的 L3-03 加入关联文档 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.0.1 | 修正 RPCSEC_GSS sequence 语义、HA keytab 分发边界、kvno 主动验证标注、票据销毁实验、flavor 验证命令和 Java 探针清理失败处理，补充 RFC 2623/RFC 7862 参考 | 基于发布前复查发现的问题修订 |
 | 2026-08-02 | 1.0.0 | 初始发布 | 建立 RPCSEC_GSS、Kerberos、keytab、GSS context、Java 凭据和生产排障安全基线 |

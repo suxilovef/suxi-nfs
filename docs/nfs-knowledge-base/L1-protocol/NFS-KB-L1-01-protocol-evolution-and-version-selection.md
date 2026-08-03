@@ -3,8 +3,8 @@
 > 文档状态：待验证  
 > 知识阶段：L1 协议原理  
 > 适用范围：Linux NFS 客户端与服务端；NFSv3、NFSv4.0、NFSv4.1、NFSv4.2；生产版本选择需结合目标内核、`nfs-utils`、存储实现和厂商兼容矩阵  
-> 版本：1.0.2\
-> 最后更新：2026-08-02\
+> 版本：1.0.3\
+> 最后更新：2026-08-03\
 > 前置文档：[NFS-KB-L0-01 Java 文件 I/O 到 NFS 服务端的端到端链路](../L0-foundation/NFS-KB-L0-01-end-to-end-io.md)、[NFS-KB-L0-02 SUNRPC、XDR 与 RPC 请求生命周期](../L0-foundation/NFS-KB-L0-02-sunrpc-xdr-request-lifecycle.md)  
 > 关联文档：[NFS-KB-L3-01 AUTH_SYS、身份映射与 Linux 权限模型](../L3-security/NFS-KB-L3-01-auth-sys-identity-mapping-and-linux-permissions.md)、[NFS-KB-L3-02 RPCSEC_GSS 与 Kerberos 认证、完整性和隐私保护](../L3-security/NFS-KB-L3-02-rpcsec-gss-kerberos-authentication-integrity-and-privacy.md)
 
@@ -396,12 +396,13 @@ rm -f "$TEST_FILE.renamed"
 - 待建立：`NFS-KB-L2-01` 服务端导出与客户端挂载基线
 - [NFS-KB-L3-01 AUTH_SYS、身份映射与 Linux 权限模型](../L3-security/NFS-KB-L3-01-auth-sys-identity-mapping-and-linux-permissions.md)
 - [NFS-KB-L3-02 RPCSEC_GSS 与 Kerberos 认证、完整性和隐私保护](../L3-security/NFS-KB-L3-02-rpcsec-gss-kerberos-authentication-integrity-and-privacy.md)
-- 待建立：`NFS-KB-L4-01` NFS 性能指标、基线与容量模型
+- [NFS-KB-L4-01 NFS 性能指标、基线与容量模型](../L4-performance/NFS-KB-L4-01-performance-metrics-baseline-and-capacity-model.md)
 
 ## 变更记录
 
 | 日期 | 版本 | 变更内容 | 证据或原因 |
 | --- | --- | --- | --- |
+| 2026-08-03 | 1.0.3 | 将已发布的 L4-01 加入关联文档 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.0.2 | 将已发布的 L3-02 加入关联文档 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.0.1 | 将已发布的 L3-01 加入关联文档，并拆分 Kerberos 后续主题引用 | 知识库交叉引用校验 |
 | 2026-08-01 | 1.0.0 | 初始发布 | 建立 NFSv3 到 NFSv4.2 的协议演进与版本选型模型 |

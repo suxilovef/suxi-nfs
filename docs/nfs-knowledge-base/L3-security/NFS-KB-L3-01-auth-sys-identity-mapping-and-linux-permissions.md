@@ -3,10 +3,10 @@
 > 文档状态：待验证  
 > 知识阶段：L3 安全与身份  
 > 适用范围：Linux NFS 客户端与服务端；RHEL/Rocky/AlmaLinux 8/9、Ubuntu 22.04/24.04 常见环境；NFSv3、NFSv4.0、NFSv4.1、NFSv4.2；`sec=sys`、Linux DAC、POSIX ACL、常见 NFSv4 owner 映射和 SELinux 集成边界；具体行为以目标内核、nfs-utils、NSS/SSSD、后端文件系统及存储厂商实现为准  
-> 版本：1.1.1  
-> 最后更新：2026-08-02  
+> 版本：1.1.2\
+> 最后更新：2026-08-03\
 > 前置文档：[NFS-KB-L0-02 SUNRPC、XDR 与 RPC 请求生命周期](../L0-foundation/NFS-KB-L0-02-sunrpc-xdr-request-lifecycle.md)、[NFS-KB-L2-01 服务端导出与客户端挂载生产基线](../L2-deployment/NFS-KB-L2-01-export-and-mount-baseline.md)  
-> 关联文档：[NFS-KB-L1-01 NFSv3 到 NFSv4.2 的协议演进与版本选型](../L1-protocol/NFS-KB-L1-01-protocol-evolution-and-version-selection.md)、[NFS-KB-L2-02 systemd、fstab、autofs 与挂载生命周期](../L2-deployment/NFS-KB-L2-02-systemd-autofs-mount-lifecycle.md)、[NFS-KB-L3-02 RPCSEC_GSS 与 Kerberos 认证、完整性和隐私保护](NFS-KB-L3-02-rpcsec-gss-kerberos-authentication-integrity-and-privacy.md)
+> 关联文档：[NFS-KB-L1-01 NFSv3 到 NFSv4.2 的协议演进与版本选型](../L1-protocol/NFS-KB-L1-01-protocol-evolution-and-version-selection.md)、[NFS-KB-L2-02 systemd、fstab、autofs 与挂载生命周期](../L2-deployment/NFS-KB-L2-02-systemd-autofs-mount-lifecycle.md)、[NFS-KB-L3-02 RPCSEC_GSS 与 Kerberos 认证、完整性和隐私保护](NFS-KB-L3-02-rpcsec-gss-kerberos-authentication-integrity-and-privacy.md)、[NFS-KB-L3-03 NFSv4 ACL、SELinux 与多协议权限集成](NFS-KB-L3-03-nfsv4-acl-selinux-and-multiprotocol-permissions.md)
 
 ## 目录
 
@@ -1086,12 +1086,13 @@ T0 Java 异常：操作、路径、PID、主机
 - [NFS-KB-L2-01 服务端导出与客户端挂载生产基线](../L2-deployment/NFS-KB-L2-01-export-and-mount-baseline.md)
 - [NFS-KB-L2-02 systemd、fstab、autofs 与挂载生命周期](../L2-deployment/NFS-KB-L2-02-systemd-autofs-mount-lifecycle.md)
 - [NFS-KB-L3-02 RPCSEC_GSS 与 Kerberos 认证、完整性和隐私保护](NFS-KB-L3-02-rpcsec-gss-kerberos-authentication-integrity-and-privacy.md)
-- 待建立：`NFS-KB-L3-03` NFSv4 ACL、SELinux 与多协议权限集成
+- [NFS-KB-L3-03 NFSv4 ACL、SELinux 与多协议权限集成](NFS-KB-L3-03-nfsv4-acl-selinux-and-multiprotocol-permissions.md)
 
 ## 变更记录
 
 | 日期 | 版本 | 变更内容 | 证据或原因 |
 | --- | --- | --- | --- |
+| 2026-08-03 | 1.1.2 | 将已发布的 L3-03 加入关联文档 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.1.1 | 将已发布的 L3-02 加入关联文档 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.1.0 | 收紧 ACL 示例范围和备份权限，重构双客户端、root squash 与 ACL 实验，补全 Java 短写处理、异常映射、清理和 automount 取证边界 | 基于文档审查结果修订 |
 | 2026-08-02 | 1.0.0 | 初始发布 | 建立 AUTH_SYS、数字身份、squash、ACL、SELinux、容器和 Java 权限排障生产知识基线 |

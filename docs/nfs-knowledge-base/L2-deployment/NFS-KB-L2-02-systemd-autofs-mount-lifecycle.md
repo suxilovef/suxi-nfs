@@ -3,8 +3,8 @@
 > 文档状态：待验证  
 > 知识阶段：L2 部署与配置  
 > 适用范围：Linux NFS 客户端；RHEL/Rocky/AlmaLinux 8/9、Ubuntu 22.04/24.04 常见环境；systemd 管理的 NFSv3、NFSv4.0、NFSv4.1、NFSv4.2 挂载；具体行为以目标 systemd、autofs、nfs-utils、内核及发行版文档为准  
-> 版本：1.1.1  
-> 最后更新：2026-08-02  
+> 版本：1.1.2
+> 最后更新：2026-08-03
 > 前置文档：[NFS-KB-L2-01 服务端导出与客户端挂载生产基线](NFS-KB-L2-01-export-and-mount-baseline.md)  
 > 关联文档：[NFS-KB-L1-03 NFSv4 状态、租约、stateid 与恢复](../L1-protocol/NFS-KB-L1-03-nfsv4-state-lease-stateid-and-recovery.md)
 
@@ -861,13 +861,14 @@ systemctl status "$MOUNT_UNIT" --no-pager
 - [NFS-KB-L2-01 服务端导出与客户端挂载生产基线](NFS-KB-L2-01-export-and-mount-baseline.md)
 - [NFS-KB-L1-03 NFSv4 状态、租约、stateid 与恢复](../L1-protocol/NFS-KB-L1-03-nfsv4-state-lease-stateid-and-recovery.md)
 - [NFS-KB-L3-01 AUTH_SYS、身份映射与 Linux 权限模型](../L3-security/NFS-KB-L3-01-auth-sys-identity-mapping-and-linux-permissions.md)
-- 待建立：`NFS-KB-L4-01` NFS 性能指标、基线与容量模型
+- [NFS-KB-L4-01 NFS 性能指标、基线与容量模型](../L4-performance/NFS-KB-L4-01-performance-metrics-baseline-and-capacity-model.md)
 - 待建立：`NFS-KB-L5-01` NFS 挂载卡死与不可中断 I/O 排障
 
 ## 变更记录
 
 | 日期 | 版本 | 变更内容 | 证据或原因 |
 | --- | --- | --- | --- |
+| 2026-08-03 | 1.1.2 | 将已发布的 L4-01 加入关联文档 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.1.1 | 将已发布的 L3-01 加入关联文档链接 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.1.0 | 修正 systemd timeout 验证属性、禁止混用 `noauto` 与 automount、修复本地误写实验退出逻辑，补充 automount 触发副作用、autofs 配置回滚、Java import、挂载身份证据和执行端标注 | 基于文档审查结果修订；依据 systemd/autofs man pages 复核 |
 | 2026-08-02 | 1.0.0 | 初始发布 | 建立 systemd、fstab、autofs 与 NFS 挂载生命周期生产知识基线 |

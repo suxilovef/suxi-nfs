@@ -3,8 +3,8 @@
 > 文档状态：待验证  
 > 知识阶段：L2 部署与配置  
 > 适用范围：Linux NFS 服务端与客户端；RHEL/Rocky/AlmaLinux 8/9、Ubuntu 22.04/24.04 常见环境；NFSv3、NFSv4.0、NFSv4.1、NFSv4.2；具体参数以目标内核、`nfs-utils`、systemd、发行版文档和存储厂商兼容矩阵为准  
-> 版本：1.1.3\
-> 最后更新：2026-08-02\
+> 版本：1.1.4\
+> 最后更新：2026-08-03\
 > 前置文档：[NFS-KB-L1-01 NFSv3 到 NFSv4.2 的协议演进与版本选型](../L1-protocol/NFS-KB-L1-01-protocol-evolution-and-version-selection.md)、[NFS-KB-L1-02 NFSv3 协议流程与状态边界](../L1-protocol/NFS-KB-L1-02-nfsv3-protocol-and-state-boundaries.md)、[NFS-KB-L1-03 NFSv4 状态、租约、stateid 与恢复](../L1-protocol/NFS-KB-L1-03-nfsv4-state-lease-stateid-and-recovery.md)  
 > 关联文档：[NFS-KB-L2-02 systemd、fstab、autofs 与挂载生命周期](NFS-KB-L2-02-systemd-autofs-mount-lifecycle.md)、[NFS-KB-L3-01 AUTH_SYS、身份映射与 Linux 权限模型](../L3-security/NFS-KB-L3-01-auth-sys-identity-mapping-and-linux-permissions.md)、[NFS-KB-L3-02 RPCSEC_GSS 与 Kerberos 认证、完整性和隐私保护](../L3-security/NFS-KB-L3-02-rpcsec-gss-kerberos-authentication-integrity-and-privacy.md)
 
@@ -455,12 +455,13 @@ Java 代码看到的是普通文件 API，但挂载参数决定故障时线程�
 - [NFS-KB-L2-02 systemd、fstab、autofs 与挂载生命周期](NFS-KB-L2-02-systemd-autofs-mount-lifecycle.md)
 - [NFS-KB-L3-01 AUTH_SYS、身份映射与 Linux 权限模型](../L3-security/NFS-KB-L3-01-auth-sys-identity-mapping-and-linux-permissions.md)
 - [NFS-KB-L3-02 RPCSEC_GSS 与 Kerberos 认证、完整性和隐私保护](../L3-security/NFS-KB-L3-02-rpcsec-gss-kerberos-authentication-integrity-and-privacy.md)
-- 待建立：`NFS-KB-L4-01` NFS 性能指标、基线与容量模型
+- [NFS-KB-L4-01 NFS 性能指标、基线与容量模型](../L4-performance/NFS-KB-L4-01-performance-metrics-baseline-and-capacity-model.md)
 
 ## 变更记录
 
 | 日期 | 版本 | 变更内容 | 证据或原因 |
 | --- | --- | --- | --- |
+| 2026-08-03 | 1.1.4 | 将已发布的 L4-01 加入关联文档 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.1.3 | 将已发布的 L3-02 加入关联文档 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.1.2 | 将已发布的 L3-01 加入关联文档，并拆分 Kerberos 后续主题引用 | 知识库交叉引用校验 |
 | 2026-08-02 | 1.1.1 | 将已发布的 L2-02 加入关联文档链接，修正“待建立”引用 | 知识库交叉引用校验 |
